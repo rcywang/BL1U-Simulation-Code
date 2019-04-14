@@ -1,0 +1,92 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jan 28 21:51:41 2019
+
+@author: rcywang
+"""
+
+import numpy as np
+from os import listdir
+
+#-----------------------------------------------------------------------------#
+### DATA EXTRACTION (FROM ZNTUPLES)
+#-----------------------------------------------------------------------------#
+
+mypath = '/Users/yourname/location of ZNtuple ASCII files'
+filelist = [item for item in listdir(mypath) if (item[0] == 'Z' and str.isdigit(item[1:-4]))]
+
+# Data is arranged as: [x y z Px Py Pz t PDGid EventID TrackID ParentID Weight]
+# length refers to number of particles detected at each detector
+
+x_set, y_set, z_set, px_set, py_set, pz_set, length = [], [], [], [], [], [], []
+xbar, ybar, zbar, pxbar, pybar, pzbar = [], [], [], [], [], []
+rms, r_b = [], []
+
+for i in range(len(filelist)):
+    loadfile = np.loadtxt(filelist[i], delimiter=' ')
+#    if not isinstance(loadfile[i], np.ndarray):   # need this condition if Zntuple is empty
+#        continue
+    if len(loadfile) == 0:
+        continue
+    x = [float(item[0]) for item in loadfile]
+    y = [float(item[1]) for item in loadfile]
+    z = [float(item[2]) for item in loadfile]
+    px = [float(item[3]) for item in loadfile]
+    py = [float(item[4]) for item in loadfile]
+    pz = [float(item[5]) for item in loadfile]
+    PDGid = [float(item[7]) for item in loadfile]
+    TrackID = [float(item[9]) for item in loadfile]
+    
+    length.append(float(len(x)))
+    
+    x_set.append(x)
+    y_set.append(y)
+    z_set.append(z[0])
+    px_set.append(px)
+    py_set.append(py)
+    pz_set.append(pz)
+
+    xbar.append(np.mean(np.array(x)))
+    ybar.append(np.mean(np.array(y)))
+    zbar.append(np.mean(np.array(z)))
+    pxbar.append(np.mean(np.array(px)))
+    pybar.append(np.mean(np.array(py)))
+    pzbar.append(np.mean(np.array(pz)))
+    
+    r = []
+    for j in range(len(x)):
+        r.append(np.sqrt(x[j]**2 + y[j]**2))  
+        
+    rms.append(np.std(r))
+    r_b.append(np.average(r))
+
+    
+# SORT BY INCREASING Z BUT KEEP CORRESPONDING QUANTITIY ATTACHED TO EACH VALUE
+    
+zipped = zip(z_set, rms, length, r_b, x_set, y_set)
+zipped_sorted = sorted(zipped, key=lambda m: m[0])
+z_set_sorted = [m[0] for m in zipped_sorted]
+rms_sorted = [m[1] for m in zipped_sorted]
+length_sorted = [m[2] for m in zipped_sorted]
+r_b_sorted = [m[3] for m in zipped_sorted]
+x_set_sorted = [m[4] for m in zipped_sorted]
+y_set_sorted = [m[5] for m in zipped_sorted]
+
+#-----------------------------------------------------------------------------#
+### COMPONENT PLACEMENT (PROJECTION)
+#-----------------------------------------------------------------------------#
+
+wtargetloc = 9936.48 + 5623.56 + 11054.08 + 5727.7  # location of tungsten target
+Zlist = np.linspace(0, wtargetloc, wtargetloc)
+
+def proj(deg):
+    return np.cos(deg * np.pi/180)
+
+Zcomploc = [1417.32*proj(19.8), 2164.08*proj(19.8), 3484.88*proj(19.8),
+            5727.7, 7762.24, 8531.86, 9296.4, 10980.42, 14175.74,
+            16781.78, 22405.34*proj(9), 27492.96*proj(9+7),
+            27912.06*proj(9+7), 31000*proj(9+7), 32341.82]
+
+Complen = [609.6, 609.6, 711.2, 1276.3, 711.2, 711.2, 609.6, 1500, 1000, 
+           1003.046, 1601.169, 406.4, 406.4, 299.9994, 0]  # lengths of components (ordered)
