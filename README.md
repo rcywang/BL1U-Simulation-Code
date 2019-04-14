@@ -8,6 +8,6 @@ Corresponding simulation code for work done on beamline 1U (BL1U) optimization a
     > ifort Opera2BLFieldMap.f  # in the location of the .f file 
     > ./a.out  # returns output file called "fort.2"
 ```
-  * **Note: the input file must be named as "fort.1"**
-  * The fort.2 file must be in the same directory as the .in file
+    - **Note: the input file must be named as "fort.1"**
+    - The fort.2 file must be in the same directory as the .in file
 - Provided Python code is for data extraction only
