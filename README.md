@@ -6,6 +6,7 @@ Corresponding simulation code for work done on beamline 1U (BL1U) optimization a
 - Regarding the FORTRAN file:
   - **Note: the input file must be named as "fort.1"**
   - The fort.2 file must be in the same directory as the .in file
+  - Some parameters must be changed on line 37/38 of the Opera2BLFieldMap.f file in accordance with the data table output parameters from OPERA-3d
   - The FORTRAN program may be run (using iFort) using the command line as such:
 ```
     > ifort Opera2BLFieldMap.f  # in the location of the .f file 
