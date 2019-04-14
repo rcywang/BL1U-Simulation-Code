@@ -1,2 +1,2 @@
-# BL1U-G4beamline-Code
-Corresponding G4beamline code for work done on beamline 1U optimization at TRIUMF. Completed in part of an undergraduate thesis for the Combined Honours in Physics &amp; Astronomy program.
+# BL1U-Simulation-Code
+Corresponding simulation code for work done on beamline 1U (BL1U) optimization at TRIUMF. Completed in part of an undergraduate thesis for the Combined Honours in Physics &amp; Astronomy program. A Monte Carlo simulation was performed on a G4beamline rendering of BL1U at TRIUMF in an effort to increase ultracold neutron production while avoiding target end window failure reuslting from excessive heat load. The results of this thesis can be found in the UBC library.
