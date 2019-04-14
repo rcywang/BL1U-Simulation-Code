@@ -1,13 +1,8 @@
-* BL1U SIMULATION CODE by Rachel Wang
-* Based on code for BL1A by F.W. Jones, TRIUMF
-* Last updated: 16:44 on April 13, 2019
-
-***************************************
-* CHANGELOG
-* ref. momentum = 480 MeV
-* pipe innerRadius 2" with thickness 1"
-***************************************
-
+************************************************
+* BL1U SIMULATION CODE by Rachel Wang          *
+* Based on code for BL1A by F.W. Jones, TRIUMF *
+* Last updated: 16:44 on April 13, 2019        *
+************************************************
 
 # PRELIMINARIES
 param -unset doStochastics=1
@@ -262,18 +257,18 @@ place pipe1UQ1-1UQ2 z=($SP+5506.72+$SP+5087.62)/2
 
 **************************************************************
 
-# RASTER MAGNET
+# RASTER MAGNET (UNCOMMENT TO INCLUDE RASTER MAGNET)
 param pi=3.14159
 param tau=1
 
-fieldexpr RASTfield time=sin(2*$pi*t/$tau) Bx=0.048 \  # if just field amplitude, remove time dependence
-	height=100 width=100 length=250
+#fieldexpr RASTfield time=sin(2*$pi*t/$tau) Bx=0.048 \  # if just field amplitude, remove time dependence
+#	height=100 width=100 length=250
 
-box RASTbox height=100 width=100 length=250 \
-	color=.6,.6,.6
+#box RASTbox height=100 width=100 length=250 \
+#	color=.6,.6,.6
 
-place RASTfield z=$SP+6200
-place RASTbox z=$SP+6200
+#place RASTfield z=$SP+6200
+#place RASTbox z=$SP+6200
 
 **************************************************************
 
