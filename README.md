@@ -4,7 +4,7 @@ Corresponding simulation code for work done on beamline 1U (BL1U) optimization a
 *A few helpful notes:*
 - For the G4beamline code: the input file into the simulation software must have a name of the form "MyG4InputFile.in"
 - Regarding the FORTRAN file:
-  - **Note: the input file must be named as "fort.1"**
+  - **Note: the input file must be named as "fort.1" and is obtained from OPERA-3d**
   - The fort.2 file must be in the same directory as the .in file
   - Some parameters must be changed on line 37/38 of the Opera2BLFieldMap.f file in accordance with the data table output parameters from OPERA-3d
   - The FORTRAN program may be run (using iFort) using the command line as such:
