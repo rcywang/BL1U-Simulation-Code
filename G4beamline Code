@@ -1,0 +1,363 @@
+* BL1U SIMULATION CODE by Rachel Wang
+* Based on code for BL1A by F.W. Jones, TRIUMF
+* Last updated: 16:44 on April 13, 2019
+
+***************************************
+* CHANGELOG
+* ref. momentum = 480 MeV
+* pipe innerRadius 2" with thickness 1"
+***************************************
+
+
+# PRELIMINARIES
+param -unset doStochastics=1
+physics QGSP_BIC doStochastics=$doStochastics
+
+param nEvents=10000
+
+param -unset pMomentumRef=1063.551  # calculation for 480 MeV
+beam ascii filename=fort1.3 \
+   beamZ=0 nEvents=$nEvents
+
+param worldMaterial=Vacuum
+param -unset VacuumColor=0.,0.,0.
+
+reference referenceMomentum=$pMomentumRef particle=proton beamZ=0 \
+   beamX=0 beamXp=0 beamY=0 beamYp=0
+particlecolor proton=1,0,0 neutron=0,1,1 gamma=0,1,0 e-=0,0,1 \
+	plus=1,0,1 minus=1,1,0 neutral=0,1,1 reference=1,1,1
+
+
+*******************************
+#     ELEMENT DEFINITIONS     #
+*******************************
+
+# QUADRUPOLES
+genericquad Q148 apertureRadius=103.124/2 ironRadius=914.4/2 \
+	fringe=1 fringeFactor=0.1 kill=1  ironColor=0,.9,.9
+
+genericquad Q198 apertureRadius=103.124/2 ironRadius=914.4/2 \
+	fringe=1 fringeFactor=0.1 kill=1  ironColor=.7,.6,1
+
+param LQ148=609.6
+param LQ198=711.2
+
+zntuple format=ascii z=1412.32 referenceParticle=0
+place Q148 rename=Q1 z=1417.32 fieldLength=$LQ148 ironLength=$LQ148
+zntuple format=ascii z=1422.32 referenceParticle=0
+zntuple format=ascii z=2159.08 referenceParticle=0
+place Q148 rename=Q2 z=2164.08 fieldLength=$LQ148 ironLength=$LQ148
+zntuple format=ascii z=2169.08 referenceParticle=0
+zntuple format=ascii z=3479.88 referenceParticle=0
+place Q198 rename=Q3 z=3484.88 fieldLength=$LQ198 ironLength=$LQ198
+zntuple format=ascii z=3489.88 referenceParticle=0
+
+param radiusin=50.8
+param radiusout=101.6
+param tubcolor=.3,.3,.3
+
+tubs pipeQ1-Q2 innerRadius=$radiusin outerRadius=$radiusout length=2*(2164.08-((1417.32+2164.08)/2)-$LQ148/2) \
+        kill=1 color=$tubcolor
+tubs pipeQ2-Q3 innerRadius=$radiusin outerRadius=$radiusout length=3484.88-2164.08-($LQ148/2)-($LQ198/2) \
+        kill=1 color=$tubcolor
+
+place pipeQ1-Q2 z=(1417.32+2164.08)/2
+place pipeQ2-Q3 z=(2164.08+3484.88)/2-(($LQ198-$LQ148)/4)
+
+**************************************************************
+
+# DET BEFORE 1VB1
+virtualdetector 1VB1A format=ascii \
+	height=1000 width=1000 length=1 material=Vacuum\
+	color=1,0,1,.95 require=Px*x>0&&Py*y>0 kill=0
+
+place 1VB1A rename=det# z=5727.7-1000
+
+**************************************************************
+
+# LOCATION OF 1VB1
+param S=5727.7
+
+# 1VB1 BENDING DIPOLE
+tune B1By z0=0 z1=10000 initial=-0.9555 step=0.001 \
+     expr=x1 tolerance=0.1 maxIter=100
+
+param LB1=1276.3
+
+genericbend B1 fieldWidth=1000 fieldHeight=102 fieldLength=$LB1 \
+        By=B1By fringeFactor=0.25\
+   ironColor=1,0,0 ironWidth=1000 ironHeight=1000 ironLength=$LB1
+
+tubs pipeQ3-1VB1 innerRadius=$radiusin outerRadius=$radiusout length=$S-3484.88-($LQ198/2)-15 \
+        kill=1 color=$tubcolor
+place pipeQ3-1VB1 front=1 z=3484.88+$LQ198/2  # 15mm (in length, above) to avoid particle hits with bender
+
+corner B1c1 z=$S rotation=Y+(19.8/2)
+zntuple format=ascii z=5722.7 referenceParticle=0
+place B1 rename=B1. z=$S+0.5*$LB1  # actual location of 1VB1
+zntuple format=ascii z=5732.7 referenceParticle=0
+
+param Slb1=$S+$LB1
+corner B1c2 z=$Slb1 rotation=Y+(19.8/2)
+
+zntuple format=ascii z=$S+2029.54 referenceParticle=0
+place Q198 rename=Q4 z=$S+2034.54 fieldLength=$LQ198 ironLength=$LQ198
+zntuple format=ascii z=$S+2039.54 referenceParticle=0
+zntuple format=ascii z=$S+2799.16 referenceParticle=0
+place Q198 rename=Q5 z=$S+2804.16 fieldLength=$LQ198 ironLength=$LQ198
+zntuple format=ascii z=$S+2809.16 referenceParticle=0
+zntuple format=ascii z=$S+3563.7 referenceParticle=0
+place Q148 rename=Q6 z=$S+3568.7 fieldLength=$LQ148 ironLength=$LQ148
+zntuple format=ascii z=$S+3573.7 referenceParticle=0
+
+tubs pipe1VB1-Q4 innerRadius=$radiusin outerRadius=$radiusout length=$S+2034.54-$LQ198/2-($S+0.5*$LB1)-$LB1/2-25 \
+        kill=1 color=$tubcolor
+tubs pipeQ4-Q5 innerRadius=$radiusin outerRadius=$radiusout length=$S+2804.16-$LQ198-($S+2034.54) \
+        kill=1 color=$tubcolor
+tubs pipeQ5-Q6 innerRadius=$radiusin outerRadius=$radiusout length=$S+3568.7-$LQ148/2-($S+2804.16)-$LQ198/2 \
+        kill=1 color=$tubcolor
+
+place pipe1VB1-Q4 front=1 z=$S+0.5*$LB1+$LB1/2+15
+place pipeQ4-Q5 z=($S+2804.16+$S+2034.54)/2
+place pipeQ5-Q6 front=1 z=$S+2804.16+$LQ198/2
+
+**************************************************************
+
+# DET AFTER 1VB1
+virtualdetector 1VB1B format=ascii \
+	height=1000 width=1000 length=1 material=Vacuum \
+	color=1,0,1,.95 require=Px*x>0&&Py*y>0 kill=0
+
+place 1VB1B rename=det# z=$S+1500
+
+**************************************************************
+
+# KICKER
+fieldexpr KICKfield time=if(0<t<0.000050,1,0) tmin=0 tmax=0.000060 \
+	Bz=0.0436 factorB=1.0 height=770 width=500 length=15000
+
+box KICKbox height=770 width=500 length=1500 \
+	color=.6,.6,.6
+
+place KICKfield z=$S+5252.72
+zntuple format=ascii z=$S+5247.72 referenceParticle=0
+place KICKbox z=$S+5252.72
+zntuple format=ascii z=$S+5257.72 referenceParticle=0
+
+tubs pipeQ6-KICK innerRadius=$radiusin outerRadius=$radiusout length=($S+5252.72)-1500/2-($S+3568.7)-$LQ148/2 \
+        kill=1 color=$tubcolor
+place pipeQ6-KICK front=1 z=$S+3568.7+$LQ148/2
+
+**************************************************************
+
+# BEAM PROFILE 1 (must run as administrator and close sim. to view)
+#profile zloop=$S+6000:$S+8000:100 particle=proton filename="beamprofile1_kicker.txt"
+
+**************************************************************
+
+# 1BVB2 (PLACEHOLDER)
+box VB2 height=1000 width=1000 length=1000 \
+	color=.6,.6,.6
+
+zntuple format=ascii z=$S+8443.04 referenceParticle=0
+place VB2 z=$S+8448.04
+zntuple format=ascii z=$S+8453.04 referenceParticle=0
+
+tubs pipeKICK-VB2 innerRadius=$radiusin outerRadius=$radiusout length=$S+8448.04-1000/2-($S+5252.72)-1500/2 \
+        kill=1 color=$tubcolor
+place pipeKICK-VB2 front=1 z=$S+5252.72+1500/2
+
+**************************************************************
+
+# LOCATION OF SEPTUM
+param D=$S+11054.08
+
+# SEPTUM
+tune B2By z0=$S+5000 z1=$D initial=-0.555 step=0.0001 \
+		expr=x1 tolerance=0.1 maxIter=100
+
+param LSEPT=1003.046
+
+fieldmap SEPT filename=fort.2 current=0.205
+box SEPTBOX width=1277.874 height=1000 length=$LSEPT
+
+place SEPT z=$D+0.5*$LSEPT
+place SEPTBOX z=$D+0.5*$LSEPT rotation=Z+(4.376)
+
+tubs pipeVB2-SEPT innerRadius=$radiusin outerRadius=$radiusout length=$D+0.5*$LSEPT-$LSEPT/2-($S+8448.04)-1000/2-10 \
+        kill=1 color=$tubcolor
+place pipeVB2-SEPT front=1 z=($S+8448.04)+1000/2
+
+cornerarc B2c3 z=$D angle=9/2 centerRadius=4000 rotation=Z+4.376/2
+zntuple format=ascii z=$D-5 referenceParticle=0
+cornerarc B2c4 z=$D+$LSEPT angle=9/2 centerRadius=4000 rotation=Z+4.376/2
+zntuple format=ascii z=$D+5 referenceParticle=0
+
+**************************************************************
+
+# BEAM PROFILE 2
+#profile zloop=$D+1000:$D+3000:100 particle=proton filename="beamprofile2_septum.txt"
+
+**************************************************************
+
+# FIRST HARP MONITOR
+virtualdetector HARP1 format=ascii \
+	height=1000 width=1000 length=1 \
+	color=1,0,1,.95 require=Px*x>0&&Py*y>0 kill=0
+
+place HARP1 rename=det# z=$D+3703.32+406.4
+
+**************************************************************
+
+# LOCTION OF SCALLOP (1UB0 bender)
+param SP=$D+5623.56
+param LUB0=1601.169
+
+**************************************************************
+
+# 1UB0 SCALLOP
+tune B3By z0=$D-1000 z1=$SP+2000 initial=-0.9555 step=0.0001 \
+		expr=x1 tolerance=0.01 maxIter=1000
+
+genericbend B3 fieldWidth=1000 fieldHeight=102 fieldLength=$LUB0 \
+		By=B3By fringeFactor=0.25 \
+	ironColor=1,0,0 ironWidth=1000 ironHeight=1000 ironLength=$LUB0
+
+tubs pipeSEPT-1UB0 innerRadius=$radiusin outerRadius=$radiusout length=$SP+0.5*$LUB0-$LUB0/2-($D+0.5*$LSEPT)-$LSEPT/2-10-25 \
+    kill=1 color=$tubcolor
+place pipeSEPT-1UB0 z=($SP+0.5*$LUB0+$D+0.5*$LSEPT)/2-(($LUB0-$LSEPT)/4)
+
+corner B3c5 z=$SP rotation=Y+(7/2)
+zntuple format=ascii z=$SP-5 referenceParticle=0
+place B3 rename=B3. z=$SP+0.5*$LUB0  # actual location of 1UB0
+zntuple format=ascii z=$SP+5 referenceParticle=0
+corner B3c6 z=$SP+$LUB0 rotation=Y+(7/2)
+
+**************************************************************
+
+# BEAM PROFILE 3
+#profile zloop=$SP+1000:$SP+3000:100 particle=proton filename="beamprofile3_scallop.txt"
+
+**************************************************************
+
+# 1UQ1/Q2 QUADS
+genericquad UQ apertureRadius=103.124/2 ironRadius=533.4/2 \
+	fringe=1 fringeFactor=0.1 kill=1  ironColor=.6,.6,.6
+
+param LUQ=406.4
+
+zntuple format=ascii z=$SP+5082.62 referenceParticle=0
+place UQ rename=UQ1 z=$SP+5087.62 fieldLength=$LUQ ironLength=$LUQ
+zntuple format=ascii z=$SP+5092.62 referenceParticle=0
+zntuple format=ascii z=$SP+5501.72 referenceParticle=0
+place UQ rename=UQ2 z=$SP+5506.72 fieldLength=$LUQ ironLength=$LUQ
+zntuple format=ascii z=$SP+5511.72 referenceParticle=0
+
+tubs pipe1UB0-1UQ1 innerRadius=$radiusin outerRadius=$radiusout length=$SP+5087.62-$LUQ/2-($SP+0.5*$LUB0)-$LUB0/2-20 \
+    kill=1 color=$tubcolor
+place pipe1UB0-1UQ1 z=($SP+0.5*$LUB0+$SP+5087.62)/2-(($LUQ-$LUB0)/4)
+tubs pipe1UQ1-1UQ2 innerRadius=$radiusin outerRadius=$radiusout length=$SP+5506.72-$LUQ-($SP+5087.62) \
+    kill=1 color=$tubcolor
+place pipe1UQ1-1UQ2 z=($SP+5506.72+$SP+5087.62)/2
+
+**************************************************************
+
+# RASTER MAGNET
+param pi=3.14159
+param tau=1
+
+fieldexpr RASTfield time=sin(2*$pi*t/$tau) Bx=0.048 \  # if just field amplitude, remove time dependence
+	height=100 width=100 length=250
+
+box RASTbox height=100 width=100 length=250 \
+	color=.6,.6,.6
+
+place RASTfield z=$SP+6200
+place RASTbox z=$SP+6200
+
+**************************************************************
+
+# SECOND HARP MONITOR
+virtualdetector HARP2 format=ascii \
+	height=1000 width=1000 length=1 \
+	color=1,0,1,.95 require=Px*x>0&&Py*y>0 kill=0
+
+place HARP2 rename=det# z=$SP+7180.58
+
+**************************************************************
+
+# 1UCOL2 COLLIMATOR
+# dimensions from TBP1341
+material MatCOL W,0.9 Ni,0.06 Cu,0.04 density=1.0
+
+tubs 1UCOL2 innerRadius=40 outerRadius=95.25 length=299.9994 \
+	material=MatCOL color=.9,.5,0 kill=1
+
+param COL2=31016.1
+
+zntuple format=ascii z=30328 referenceParticle=0
+place 1UCOL2 z=$COL2
+zntuple format=ascii z=30338 referenceParticle=0
+
+tubs pipe1UQ2-HARP2 innerRadius=$radiusin outerRadius=$radiusout length=(7180.58-5506.72)-$LUQ/2-5 \
+    kill=1 color=$tubcolor
+place pipe1UQ2-HARP2 front=1 z=$SP+5506.72+$LUQ/2
+
+tubs pipeHARP2-1UCOL2 innerRadius=$radiusin outerRadius=$radiusout length=$COL2-($SP+7180.58)-299.9994/2-10 \
+    kill=1 color=$tubcolor
+place pipeHARP2-1UCOL2 front=1 z=$SP+7180.58+10
+
+**************************************************************
+
+# SPALLATION TARGET
+virtualdetector DET format=ascii \
+	height=1000 width=1000 length=1 \
+	color=1,0,1,.95 require=Px*x>0&&Py*y>0 kill=1
+
+place DET rename=det# z=$SP+9936.48
+zntuple format=ascii z=$SP+9935 referenceParticle=0
+
+# BEAM PROFILE
+profile zloop=0:$SP+9936.48:200 \
+	filename="profile.txt" particle=proton coordinates=centerline
+
+**************************************************************
+
+# ZNTUPLES
+zntuple format=ascii z=0 referenceParticle=0
+zntuple format=ascii z=2000 referenceParticle=0
+zntuple format=ascii z=4000 referenceParticle=0
+zntuple format=ascii z=6000 referenceParticle=0
+zntuple format=ascii z=8000 referenceParticle=0
+zntuple format=ascii z=10000 referenceParticle=0
+zntuple format=ascii z=12000 referenceParticle=0
+zntuple format=ascii z=14000 referenceParticle=0
+zntuple format=ascii z=16000 referenceParticle=0
+zntuple format=ascii z=18000 referenceParticle=0
+zntuple format=ascii z=20000 referenceParticle=0
+zntuple format=ascii z=22000 referenceParticle=0
+zntuple format=ascii z=24000 referenceParticle=0
+zntuple format=ascii z=26000 referenceParticle=0
+zntuple format=ascii z=28000 referenceParticle=0
+zntuple format=ascii z=30000 referenceParticle=0
+zntuple format=ascii z=30333 referenceParticle=0
+
+**************************************************************
+
+# PROTON BEAM LOSS TUPLE
+beamlossntuple format=bltrackfile BLNT file="lostparticles.txt" format=ascii
+
+# SURVEY COORDS
+survey coordinates=centerline filename=bl1u.svy
+
+# EV1TRK1.TXT
+trace nTrace=1 format=ascii coordinates=Centerline primaryOnly=1
+
+# TRACK CUTS to KILL SECONDARIES
+trackcuts killSecondaries=1
+
+**************************************************************
+
+g4ui when=4 "/run/beamOn 10000"   # run 10000 protons/events
+g4ui when=4 "/vis/viewer/set/style wireframe"
+g4ui when=4 "/vis/scene/add/axes 0 0 0 1000 mm"
